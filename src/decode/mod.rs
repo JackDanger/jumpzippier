@@ -1,58 +1,60 @@
-//! LZMA2 decoder — Phase 1 wrapper around `lzma-rust2`.
+//! BCJ2 decoder — Phase 1 wrapper around `lzma-rust2::filter::bcj2`.
 //!
-//! The 7z LZMA2 codec stores a 1-byte properties blob that encodes the
-//! dictionary size. This module decodes that props byte and calls
-//! `lzma_rust2::Lzma2Reader` to decompress the packed stream.
+//! BCJ2 is a multi-stream filter that reassembles 4 separate input streams
+//! into a single x86 executable byte stream. The 4 streams are:
+//!
+//! - Stream 0 (`main`): raw bytes that are neither CALL nor JMP instruction targets
+//! - Stream 1 (`call`): 4-byte relative addresses for `CALL` instructions
+//! - Stream 2 (`jump`): 4-byte relative addresses for `JMP`/`Jcc` instructions
+//! - Stream 3 (`range_coder`): range-coder probabilities used to classify bytes
+//!
+//! ## 7z folder topology for BCJ2
+//!
+//! In a 7z archive, BCJ2 is always paired with LZMA or LZMA2 in a multi-coder
+//! folder. The typical topology (from the 7z SDK) is:
+//!
+//! ```text
+//! packed[0] → LZMA decoder → BCJ2 input[1]  (main stream, LZMA-compressed)
+//! packed[1] → BCJ2 input[2]                 (call stream, often raw)
+//! packed[2] → BCJ2 input[3]                 (jump stream, often raw)
+//! packed[3] → BCJ2 input[0]                 (range_coder stream, raw)
+//!             BCJ2 output → decoded bytes
+//! ```
+//!
+//! 7zippy's `decode_bcj2_folder` in `src/pipeline/bcj2_folder.rs` handles this
+//! topology at the 7zippy level. This module provides the raw 4-stream decode.
 
 use std::io::Read;
 
-use lzma_rust2::Lzma2Reader;
+use lzma_rust2::filter::bcj2::Bcj2Reader;
 
-use crate::error::{LazippierError, LazippierResult};
+use crate::error::{JumpzippierError, JumpzippierResult};
 
-/// Decode the 7z LZMA2 properties byte into a dictionary size in bytes.
+/// Decode a BCJ2-filtered stream from 4 separate input byte slices.
 ///
-/// # Encoding (from 7z SDK `LZMA2Dec.c`):
-/// - `b == 40` → `dict_size = 0xFFFF_FFFF`
-/// - `b < 40`  → `dict_size = (2 | (b & 1)) << ((b >> 1) + 11)`
+/// The caller is responsible for decompressing individual streams (e.g. with
+/// LZMA) before calling this function; this function only handles BCJ2
+/// reassembly.
+///
+/// # Arguments
+///
+/// - `streams`: exactly 4 byte slices in order: `[main, call, jump, range_coder]`
+/// - `uncompressed_size`: the expected output size in bytes
 ///
 /// # Errors
-/// Returns [`LazippierError::InvalidProperties`] if `b > 40`.
-pub fn props_byte_to_dict_size(b: u8) -> LazippierResult<u32> {
-    if b == 40 {
-        return Ok(u32::MAX);
-    }
-    if b > 40 {
-        return Err(LazippierError::InvalidProperties(b));
-    }
-    Ok(((2u32 | (b as u32 & 1)) << ((b as u32 >> 1) + 11)) as u32)
-}
+///
+/// Returns `JumpzippierError::Io` or `Backend` on decompression failure.
+pub fn decode_4streams(streams: [&[u8]; 4], uncompressed_size: u64) -> JumpzippierResult<Vec<u8>> {
+    let readers: Vec<std::io::Cursor<&[u8]>> = streams
+        .iter()
+        .map(|s| std::io::Cursor::new(*s))
+        .collect();
 
-/// Decompress raw LZMA2 data using a 7z-style 1-byte props blob.
-///
-/// `props_bytes` must be exactly 1 byte: the LZMA2 properties byte
-/// that encodes the dictionary size (see [`props_byte_to_dict_size`]).
-///
-/// # Errors
-/// Returns an error if `props_bytes` is wrong length, props byte is invalid,
-/// or the stream is corrupt.
-pub fn decode_7z(
-    input: &[u8],
-    props_bytes: &[u8],
-    _uncompressed_size: u64,
-) -> LazippierResult<Vec<u8>> {
-    if props_bytes.len() != 1 {
-        return Err(LazippierError::Backend(format!(
-            "LZMA2 expects exactly 1 props byte, got {}",
-            props_bytes.len()
-        )));
-    }
-    let dict_size = props_byte_to_dict_size(props_bytes[0])?;
-    let mut reader = Lzma2Reader::new(input, dict_size, None);
-    let mut out = Vec::new();
+    let mut reader = Bcj2Reader::new(readers, uncompressed_size);
+    let mut out = Vec::with_capacity(uncompressed_size as usize);
     reader
         .read_to_end(&mut out)
-        .map_err(|e| LazippierError::Backend(e.to_string()))?;
+        .map_err(|e| JumpzippierError::backend(e))?;
     Ok(out)
 }
 
@@ -60,23 +62,12 @@ pub fn decode_7z(
 mod tests {
     use super::*;
 
+    /// Verify that BCJ2 decode on the trivial empty case works.
+    /// (All 4 streams empty → empty output)
     #[test]
-    fn props_byte_zero_gives_4kib() {
-        assert_eq!(props_byte_to_dict_size(0).unwrap(), 4096);
-    }
-
-    #[test]
-    fn props_byte_12_gives_256kib() {
-        assert_eq!(props_byte_to_dict_size(12).unwrap(), 262144);
-    }
-
-    #[test]
-    fn props_byte_40_gives_u32_max() {
-        assert_eq!(props_byte_to_dict_size(40).unwrap(), u32::MAX);
-    }
-
-    #[test]
-    fn props_byte_41_is_invalid() {
-        assert!(props_byte_to_dict_size(41).is_err());
+    fn decode_empty_streams() {
+        let result = decode_4streams([&[], &[], &[], &[]], 0);
+        assert!(result.is_ok(), "empty streams should succeed: {result:?}");
+        assert_eq!(result.unwrap().len(), 0);
     }
 }

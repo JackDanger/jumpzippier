@@ -1,21 +1,17 @@
-# lazippier STATUS
+# jumpzippier STATUS
 
-**Current focus:** Phase 1 wrapper complete (lzma-rust2 backend). Phase 2: native LZMA2 chunk-orchestration impl.
+**Current focus:** Phase 1 wrapper complete (lzma-rust2 bcj2 backend). Phase 2: native BCJ2 4-stream impl.
 
 | Piece | Status |
 |---|---|
-| props byte decode | ✅ |
-| encoder (wrapper) | ✅ (lzma-rust2 backend) |
-| decoder (wrapper) | ✅ (lzma-rust2 backend) |
-| round-trip tests | ✅ |
+| 4-stream decode (wrapper) | ✅ (lzma-rust2 Bcj2Reader) |
 | oracle (round-trip vs 7zz) | ✅ (via 7zippy layer5_cross) |
+| encoder | ⬜ (Phase 2 — splits 1 stream into 4) |
 | streaming | ⬜ |
-| multi-chunk support | ⬜ (Phase 2) |
-| decode bench | ✅ |
-| encode bench | ✅ |
+| decode bench | ⬜ (needs pre-split fixture) |
 | fuzz | ⬜ |
 
-**Phase 1 backend:** `lzma-rust2 v0.16` (pure-Rust LZMA2 `Lzma2Writer` + `Lzma2Reader`).
-**Phase 2:** Replace with lazippier's own chunk-orchestration implementation.
+**Phase 1 backend:** `lzma-rust2 v0.16` (`filter::bcj2::Bcj2Reader`).
+**Phase 2:** Replace with jumpzippier's own native 4-stream coordination.
 
 Symbols: ⬜ not started, 🟡 in progress, ✅ done, ❌ blocked.

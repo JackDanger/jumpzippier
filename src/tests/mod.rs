@@ -1,5 +1,3 @@
-//! Integration test helpers and test suites for lazippier.
+//! Integration test helpers and test suites for jumpzippier.
 
 pub mod fixtures;
-pub mod oracle;
-pub mod round_trip;

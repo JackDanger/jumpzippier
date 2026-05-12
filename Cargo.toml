@@ -1,17 +1,17 @@
 [package]
-name = "lazippier"
+name = "jumpzippier"
 version = "0.0.1"
 edition = "2021"
-description = "Pure-Rust LZMA2 (Lempel-Ziv-Markov chain Algorithm v2), part of the 8z umbrella"
+description = "Pure-Rust BCJ2 (Branch/Call/Jump filter v2) decoder, part of the 8z umbrella"
 license = "Zlib"
-repository = "https://github.com/JackDanger/lazippier"
+repository = "https://github.com/JackDanger/jumpzippier"
 authors = ["Jack Danger Canty"]
 build = "build.rs"
 
 [dependencies]
 thiserror = "1"
-# Phase 1 wrapper backend: lzma-rust2 provides a full pure-Rust LZMA2 encoder + decoder.
-# Phase 2 will replace this with lazippier's own native range-coder + chunk orchestration.
+# Phase 1 wrapper backend: lzma-rust2 provides the BCJ2 multi-stream decoder.
+# Phase 2 will replace this with jumpzippier's own native BCJ2 implementation.
 lzma-rust2 = { version = "0.16", features = ["encoder"] }
 
 [dev-dependencies]

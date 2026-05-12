@@ -1,14 +1,12 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 fn bench_encode(c: &mut Criterion) {
-    // 64 KiB of zeros (highly compressible) as the input.
-    let input = vec![0u8; 64 * 1024];
-
+    // BCJ2 encode is not implemented in Phase 1 (decoder-only).
+    // Placeholder for Phase 2 when native BCJ2 encoder lands.
     let mut group = c.benchmark_group("encode");
-    group.throughput(Throughput::Bytes(input.len() as u64));
-    group.bench_function("lzma2_64k_zeros", |b| {
+    group.bench_function("bcj2_placeholder", |b| {
         b.iter(|| {
-            lazippier::encode::encode_7z(black_box(&input), 262144).unwrap()
+            black_box(0u8);
         });
     });
     group.finish();
