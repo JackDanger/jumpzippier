@@ -45,16 +45,14 @@ use crate::error::{JumpzippierError, JumpzippierResult};
 ///
 /// Returns `JumpzippierError::Io` or `Backend` on decompression failure.
 pub fn decode_4streams(streams: [&[u8]; 4], uncompressed_size: u64) -> JumpzippierResult<Vec<u8>> {
-    let readers: Vec<std::io::Cursor<&[u8]>> = streams
-        .iter()
-        .map(|s| std::io::Cursor::new(*s))
-        .collect();
+    let readers: Vec<std::io::Cursor<&[u8]>> =
+        streams.iter().map(|s| std::io::Cursor::new(*s)).collect();
 
     let mut reader = Bcj2Reader::new(readers, uncompressed_size);
     let mut out = Vec::with_capacity(uncompressed_size as usize);
     reader
         .read_to_end(&mut out)
-        .map_err(|e| JumpzippierError::backend(e))?;
+        .map_err(JumpzippierError::backend)?;
     Ok(out)
 }
 

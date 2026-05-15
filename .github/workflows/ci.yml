@@ -14,7 +14,7 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  build:
+  build-matrix:
     name: Build & Test (${{ matrix.runner }})
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -50,3 +50,19 @@ jobs:
 
       - name: Run tests
         run: cargo test --release
+
+  # Aggregator — this is the status check name the branch ruleset requires.
+  # It passes only when every matrix entry above passes.
+  build:
+    name: build
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Verify matrix succeeded
+        run: |
+          if [[ "${{ needs.build-matrix.result }}" != "success" ]]; then
+            echo "build-matrix did not succeed: ${{ needs.build-matrix.result }}"
+            exit 1
+          fi
+          echo "All matrix entries passed."
