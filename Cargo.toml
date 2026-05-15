@@ -1,6 +1,6 @@
 [package]
 name = "jumpzippier"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 description = "Pure-Rust BCJ2 (Branch/Call/Jump filter v2) decoder, part of the 8z umbrella"
 license = "Zlib"
