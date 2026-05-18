@@ -1,9 +1,9 @@
 use std::io;
 use thiserror::Error;
 
-/// All errors produced by jumpzippier.
+/// All errors produced by bcjzippy.
 #[derive(Error, Debug)]
-pub enum JumpzippierError {
+pub enum BcjzippyError {
     /// Wraps an underlying IO error.
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
@@ -17,12 +17,12 @@ pub enum JumpzippierError {
     WrongStreamCount(usize),
 }
 
-impl JumpzippierError {
-    /// Construct a [`Backend`](JumpzippierError::Backend) error.
+impl BcjzippyError {
+    /// Construct a [`Backend`](BcjzippyError::Backend) error.
     pub fn backend(msg: impl ToString) -> Self {
-        JumpzippierError::Backend(msg.to_string())
+        BcjzippyError::Backend(msg.to_string())
     }
 }
 
-/// Convenience alias used throughout jumpzippier.
-pub type JumpzippierResult<T> = Result<T, JumpzippierError>;
+/// Convenience alias used throughout bcjzippy.
+pub type BcjzippyResult<T> = Result<T, BcjzippyError>;

@@ -28,7 +28,7 @@ use std::io::Read;
 
 use lzma_rust2::filter::bcj2::Bcj2Reader;
 
-use crate::error::{JumpzippierError, JumpzippierResult};
+use crate::error::{BcjzippyError, BcjzippyResult};
 
 /// Decode a BCJ2-filtered stream from 4 separate input byte slices.
 ///
@@ -43,8 +43,8 @@ use crate::error::{JumpzippierError, JumpzippierResult};
 ///
 /// # Errors
 ///
-/// Returns `JumpzippierError::Io` or `Backend` on decompression failure.
-pub fn decode_4streams(streams: [&[u8]; 4], uncompressed_size: u64) -> JumpzippierResult<Vec<u8>> {
+/// Returns `BcjzippyError::Io` or `Backend` on decompression failure.
+pub fn decode_4streams(streams: [&[u8]; 4], uncompressed_size: u64) -> BcjzippyResult<Vec<u8>> {
     let readers: Vec<std::io::Cursor<&[u8]>> =
         streams.iter().map(|s| std::io::Cursor::new(*s)).collect();
 
@@ -52,7 +52,7 @@ pub fn decode_4streams(streams: [&[u8]; 4], uncompressed_size: u64) -> Jumpzippi
     let mut out = Vec::with_capacity(uncompressed_size as usize);
     reader
         .read_to_end(&mut out)
-        .map_err(JumpzippierError::backend)?;
+        .map_err(BcjzippyError::backend)?;
     Ok(out)
 }
 

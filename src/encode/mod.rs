@@ -12,7 +12,7 @@
 //! - `rc`    (stream 3): range-coded bits that predict whether each potential
 //!   branch opcode is followed by a recognized 4-byte address
 //!
-//! The decoder (in `jumpzippier::decode`) is the exact inverse.
+//! The decoder (in `bcjzippy::decode`) is the exact inverse.
 //!
 //! ## Stream index mapping in a 7z folder
 //!
@@ -47,7 +47,7 @@ use range_enc::{RangeEncoder, PROB_INIT};
 ///
 /// ```rust,ignore
 /// let streams = encode_4streams(data);
-/// let decoded = jumpzippier::decode::decode_4streams(
+/// let decoded = bcjzippy::decode::decode_4streams(
 ///     [&streams[0], &streams[1], &streams[2], &streams[3]],
 ///     data.len() as u64,
 /// ).unwrap();

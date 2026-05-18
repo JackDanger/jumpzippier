@@ -1,4 +1,4 @@
-//! jumpzippier — Pure-Rust BCJ2 (Branch/Call/Jump filter v2) codec, part of the 8z umbrella.
+//! bcjzippy — Pure-Rust BCJ2 (x86 4-stream branch filter) encoder/decoder. Part of the [7-zippy](https://github.com/JackDanger/7zippy) family.
 //!
 //! BCJ2 is a 4-stream branch converter for 32-bit x86 executables. It splits
 //! the input into:

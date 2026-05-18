@@ -1,10 +1,10 @@
 [package]
-name = "jumpzippier"
-version = "0.0.2"
+name = "bcjzippy"
+version = "0.0.3"
 edition = "2021"
-description = "Pure-Rust BCJ2 (Branch/Call/Jump filter v2) decoder, part of the 8z umbrella"
+description = "Pure-Rust BCJ2 (x86 4-stream branch filter) encoder/decoder. Part of the 7-zippy family."
 license = "Zlib"
-repository = "https://github.com/JackDanger/jumpzippier"
+repository = "https://github.com/JackDanger/bcjzippy"
 authors = ["Jack Danger Canty"]
 build = "build.rs"
 
